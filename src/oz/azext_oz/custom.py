@@ -3,18 +3,25 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
+from re import M
 from knack.log import get_logger
 from knack.util import CLIError
-
 from .name_generator import app_name
 
 logger = get_logger(__name__)
 
 
-def init_oz(cmd, name=None, location=None, tags=None):
+def init_oz(cmd, client, location, name=None, tags=None):
     if not name:
         name = app_name()
     logger.info("Creating project %s.", name)
+    params = {
+        "location": location,
+        "tags": tags,
+    }
+    client.resource_groups.create_or_update(resource_group_name=name, parameters=params)
+    logger.info("Project created %s.", name)
+    logger.info("Your Azure settings have been written to .azure/settings.json")
 
 
 def get_app_oz(

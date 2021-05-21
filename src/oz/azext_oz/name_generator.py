@@ -116,7 +116,6 @@ nouns = [
     "water",
     "sun",
     "dream",
-    "cherry",
     "tree",
     "fog",
     "frost",
