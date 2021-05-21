@@ -7,32 +7,23 @@
 from knack.help_files import helps  # pylint: disable=unused-import
 
 
-helps['oz'] = """
+helps[
+    "oz"
+] = """
     type: group
-    short-summary: Commands to manage Ozs.
+    short-summary: Quick starts for deploying Apps on Azure
 """
 
-helps['oz create'] = """
+helps[
+    "oz init"
+] = """
     type: command
-    short-summary: Create a Oz.
+    short-summary: Initialize a new application project
 """
 
-helps['oz list'] = """
+helps[
+    "oz app:get"
+] = """
     type: command
-    short-summary: List Ozs.
+    short-summary: Get an existing project
 """
-
-# helps['oz delete'] = """
-#     type: command
-#     short-summary: Delete a Oz.
-# """
-
-# helps['oz show'] = """
-#     type: command
-#     short-summary: Show details of a Oz.
-# """
-
-# helps['oz update'] = """
-#     type: command
-#     short-summary: Update a Oz.
-# """

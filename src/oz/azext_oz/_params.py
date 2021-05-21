@@ -9,15 +9,18 @@ from knack.arguments import CLIArgumentType
 
 def load_arguments(self, _):
 
-    from azure.cli.core.commands.parameters import tags_type
-    from azure.cli.core.commands.validators import get_default_location_from_resource_group
+    from azure.cli.core.commands.parameters import tags_type, get_location_type
+    from azure.cli.core.commands.validators import (
+        get_default_location_from_resource_group,
+    )
 
-    oz_name_type = CLIArgumentType(options_list='--oz-name-name', help='Name of the Oz.', id_part='name')
+    project_name_type = CLIArgumentType(
+        options_list="--name", help="Name of the project", id_part="name"
+    )
 
-    with self.argument_context('oz') as c:
-        c.argument('tags', tags_type)
-        c.argument('location', validator=get_default_location_from_resource_group)
-        c.argument('oz_name', oz_name_type, options_list=['--name', '-n'])
+    with self.argument_context("oz") as c:
+        c.argument("tags", tags_type)
 
-    with self.argument_context('oz list') as c:
-        c.argument('oz_name', oz_name_type, id_part=None)
+    with self.argument_context("oz init") as c:
+        c.argument("location", get_location_type(self.cli_ctx))
+        c.argument("name", project_name_type)
