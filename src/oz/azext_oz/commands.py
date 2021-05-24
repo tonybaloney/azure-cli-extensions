@@ -13,6 +13,8 @@ def load_command_table(self, _):
 
     with self.command_group("oz", command_type=oz_sdk, client_factory=cf_oz) as g:
         g.custom_command("init", "init_oz")
+        g.custom_command("destroy", "destroy_oz")
+
         g.custom_command("app:get", "get_app_oz")
 
     with self.command_group("oz", is_preview=True):

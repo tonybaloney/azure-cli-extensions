@@ -5,12 +5,15 @@
 
 from dataclasses import dataclass
 import json
-from logging.config import DEFAULT_LOGGING_CONFIG_PORT
 import pathlib
-import os
 
 DEFAULT_CONFIG_PATH = '.azure'
 DEFAULT_CONFIG_NAME = 'settings.json'
+
+
+class NoProjectSettingsError(ValueError):
+    message = "No project settings file exists in {0}/{1}".format(DEFAULT_CONFIG_PATH, DEFAULT_CONFIG_NAME)
+
 
 @dataclass
 class OzConfig:
@@ -37,3 +40,24 @@ def init_project_settings(resource_group_name: str, region: str):
         config_root.mkdir()
 
     config.save(config_root / DEFAULT_CONFIG_NAME)
+
+
+def get_project_settings() -> OzConfig :
+    config_root = pathlib.Path() / DEFAULT_CONFIG_PATH
+    if not config_root.exists():
+        raise NoProjectSettingsError
+    config_file_path = config_root / DEFAULT_CONFIG_NAME
+    if not config_file_path.exists():
+        raise NoProjectSettingsError
+
+    return OzConfig.load(config_file_path)
+
+
+def destroy_project_settings():
+    config_root = pathlib.Path() / DEFAULT_CONFIG_PATH
+    if not config_root.exists():
+        return
+    config_file_path = config_root / DEFAULT_CONFIG_NAME
+    if config_file_path.exists():
+        config_file_path.unlink()
+    config_root.rmdir()  # This will fail if there are other files in the directory,  but thats ok because I don't know what they are
