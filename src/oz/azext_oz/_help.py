@@ -22,7 +22,7 @@ helps[
 """
 
 helps[
-    "oz app:get"
+    "oz app create"
 ] = """
     type: command
     short-summary: Get an existing project
