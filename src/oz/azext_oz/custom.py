@@ -3,7 +3,6 @@
 # Licensed under the MIT License. See License.txt in the project root for license information.
 # --------------------------------------------------------------------------------------------
 
-from re import M
 from knack.log import get_logger
 from knack.util import CLIError
 from .name_generator import app_name
@@ -11,7 +10,7 @@ from .name_generator import app_name
 logger = get_logger(__name__)
 
 
-def init_oz(cmd, client, location, name=None, tags=None):
+def init_oz(client, location, name=None, tags=None):
     if not name:
         name = app_name()
     logger.info("Creating project %s.", name)
