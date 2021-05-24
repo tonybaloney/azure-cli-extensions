@@ -12,7 +12,7 @@ from .config import (init_project_settings,
                      destroy_project_settings,
                      update_project_settings,
                      NoProjectSettingsError)
-from .runtimes import RUNTIME_GROUPS, get_runtime_versions
+from .runtimes import RUNTIME_GROUPS, get_runtime_versions, map_version_dict
 from azure.mgmt.web.models import AppServicePlan, Site, SiteConfig, SkuDescription, SiteSourceControl
 
 logger = get_logger(__name__)
@@ -86,11 +86,8 @@ def create_app(client, runtime=None, version=None, sku="F1"):
         )
     )
     plan = plan_task.result()
-
-    siteConfiguration = SiteConfig(
-        linux_fx_version=_runtime_internal
-    )
-
+    logger.info("Created plan %s.", plan.name)
+    logger.info("Creating webapp %s.", _app_name)
     # create a web app
     webapp_task = client.web_apps.begin_create_or_update(
         project.resource_group_name,
@@ -98,13 +95,18 @@ def create_app(client, runtime=None, version=None, sku="F1"):
         site_envelope=Site(
             location=project.region,
             server_farm_id=plan.id,
-            site_config=siteConfiguration
+            site_config=SiteConfig(
+                **map_version_dict(runtime, version)
+            )
         )
     )
 
     webapp = webapp_task.result()
+    logger.info("Created webapp %s.", webapp.name)
 
     update_project_settings(app_service=True, app_name=_app_name)
+
+    logger.info("Configuring source control.")
 
     # continuous deployment with GitHub
     sc_task = client.web_apps.begin_create_or_update_source_control(
@@ -118,4 +120,6 @@ def create_app(client, runtime=None, version=None, sku="F1"):
     )
 
     source_control = sc_task.result()
+    logger.info("Configured source control %s.", source_control.id)
+
     return webapp

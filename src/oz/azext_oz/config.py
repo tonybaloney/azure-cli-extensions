@@ -65,4 +65,7 @@ def destroy_project_settings():
 
 
 def update_project_settings(**kwargs):
-    return
+    settings = get_project_settings()
+    for k, v in kwargs.items():
+        setattr(settings, k, v)
+    settings.save(pathlib.Path() / DEFAULT_CONFIG_PATH / DEFAULT_CONFIG_NAME)
