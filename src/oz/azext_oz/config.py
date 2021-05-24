@@ -20,6 +20,7 @@ class OzConfig:
     resource_group_name: str
     region: str
     app_service: bool = False
+    app_name: str = None
     database: bool = False
 
     def save(self, file):
@@ -61,3 +62,7 @@ def destroy_project_settings():
     if config_file_path.exists():
         config_file_path.unlink()
     config_root.rmdir()  # This will fail if there are other files in the directory,  but thats ok because I don't know what they are
+
+
+def update_project_settings(**kwargs):
+    return

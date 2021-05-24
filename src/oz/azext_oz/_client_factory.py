@@ -13,6 +13,6 @@ def cf_oz(cli_ctx, *args, **kwargs):
 
 
 def app_client_factory(cli_ctx, *args, **kwargs):
-    from azure.mgmt.resource import ResourceManagementClient
+    from azure.mgmt.web import WebSiteManagementClient
 
-    return get_mgmt_service_client(cli_ctx, ResourceManagementClient)
+    return get_mgmt_service_client(cli_ctx, WebSiteManagementClient)
