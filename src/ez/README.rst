@@ -10,7 +10,6 @@ To install:
 
     > az extension add --source https://github.com/tonybaloney/azure-cli-extensions/releases/download/0.0.1/ez-0.1.0-py3-none-any.whl
 
-
 Creating a project
 ------------------
 
@@ -40,6 +39,8 @@ Pushing your code to Azure
 --------------------------
 
 After creating your basic application code to the local directory. Use git to check it in and push to the ``azure`` remote:
+
+.. code-block::
 
     > git add * 
     > git commit -m "initial project"
