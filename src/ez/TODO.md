@@ -4,7 +4,6 @@
 1. Show verbose output without the user specifying `--verbose`
 1. Implement `db create`
 1. Implement `app scale`
-1. Implement `app domain`
 1. Implement `app open`
 1. Implement `app oryx`
 1. Implement `db connect`

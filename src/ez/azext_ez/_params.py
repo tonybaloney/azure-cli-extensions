@@ -44,3 +44,10 @@ def load_arguments(self, _):
             validator=validate_sku_choice,
             help="The SKU to provision, defaults to F1 (free).",
         )
+
+    with self.argument_context("ez app domain") as c:
+        c.argument(
+            "domain",
+            options_list=["--domain", "-d"],
+            help="The domain name to configure.",
+        )

@@ -25,6 +25,8 @@ class EzConfig:
     region: str
     app_service: bool = False
     app_name: Optional[str] = None
+    app_plan_name: Optional[str] = None
+    app_domain_name: Optional[str] = None
     git_url: Optional[str] = None
     database: bool = False
 

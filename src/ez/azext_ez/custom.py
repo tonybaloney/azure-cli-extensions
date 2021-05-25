@@ -16,7 +16,13 @@ from .config import (
 )
 from .localgit import init_local_folder
 from .runtimes import RUNTIME_GROUPS, get_runtime_versions, map_version_dict
-from azure.mgmt.web.models import AppServicePlan, Site, SiteConfig, SkuDescription
+from azure.mgmt.web.models import (
+    AppServicePlan,
+    Site,
+    SiteConfig,
+    SkuDescription,
+    HostNameBinding,
+)
 from azure.cli.command_modules.appservice.custom import (
     config_diagnostics,
     get_streaming_log,
@@ -119,7 +125,9 @@ def create_app(cmd, client, runtime=None, version=None, sku="F1"):
     webapp = webapp_task.result()
     logger.info("Created webapp %s.", webapp.name)
 
-    update_project_settings(app_service=True, app_name=_app_name)
+    update_project_settings(
+        app_service=True, app_name=_app_name, app_plan_name=_plan_name
+    )
 
     creds_task = client.web_apps.begin_list_publishing_credentials(
         resource_group_name=project.resource_group_name, name=_app_name
@@ -153,3 +161,28 @@ def app_settings(client):
 def app_logs(cmd):
     project = get_project_settings()
     get_streaming_log(cmd, project.resource_group_name, project.app_name)
+
+
+def app_set_domain(client, domain):
+    project = get_project_settings()
+    logger.info("Setting domain to %s.", domain)
+
+    # Check the plan first
+    plan = client.app_service_plans.get(
+        resource_group_name=project.resource_group_name,
+        name=project.app_plan_name,
+    )
+    if plan.sku.family == "F":
+        logger.error(
+            "Cannot set custom domain names for Free tier web apps. Upgrade before setting."
+        )
+        return
+
+    client.web_apps.create_or_update_host_name_binding(
+        project.resource_group_name,
+        project.app_name,
+        domain,
+        HostNameBinding(site_name=project.app_name),
+    )
+    update_project_settings(app_domain_name=domain)
+    logger.info("Domain configured successfully", domain)
