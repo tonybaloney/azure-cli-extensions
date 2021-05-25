@@ -26,3 +26,4 @@ def load_command_table(self, _):
         g.custom_command("settings", "app_settings")
         g.custom_command("logs", "app_logs")
         g.custom_command("domain", "app_set_domain")
+        g.custom_command("scale", "app_scale")

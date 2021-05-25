@@ -4,6 +4,7 @@
 # --------------------------------------------------------------------------------------------
 
 from .runtimes import RUNTIME_GROUPS
+from .skus import WEBAPP_SKUS
 from knack.util import CLIError
 
 
@@ -15,5 +16,10 @@ def validate_runtime_choice(cmd, namespace):
 
 def validate_sku_choice(cmd, namespace):
     if namespace.sku:
-        # TODO : Compare namespace.sku with list of available skus
-        pass
+        is_valid = False
+        for sku in WEBAPP_SKUS:
+            if namespace.sku == sku["name"]:
+                is_valid = True
+
+        if not is_valid:
+            raise CLIError("Invalid SKU %s." % namespace.sku)

@@ -16,6 +16,7 @@ from .config import (
 )
 from .localgit import init_local_folder
 from .runtimes import RUNTIME_GROUPS, get_runtime_versions, map_version_dict
+from .skus import WEBAPP_SKUS
 from azure.mgmt.web.models import (
     AppServicePlan,
     Site,
@@ -186,3 +187,24 @@ def app_set_domain(client, domain):
     )
     update_project_settings(app_domain_name=domain)
     logger.info("Domain configured successfully", domain)
+
+
+def app_scale(client, sku=None):
+    project = get_project_settings()
+    if not sku:
+        choice = prompting.prompt_choice_list("Select a SKU", WEBAPP_SKUS)
+        sku = WEBAPP_SKUS[choice]["name"]
+
+    logger.info("Setting SKU to %s.", sku)
+    plan_task = client.app_service_plans.begin_create_or_update(
+        resource_group_name=project.resource_group_name,
+        name=project.app_plan_name,
+        app_service_plan=AppServicePlan(
+            location=project.region,
+            sku=SkuDescription(
+                name=sku,
+            ),
+        ),
+    )
+    plan = plan_task.result()
+    logger.info("SKU changed to %s.", sku)

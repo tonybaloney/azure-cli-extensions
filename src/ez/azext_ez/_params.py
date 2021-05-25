@@ -51,3 +51,11 @@ def load_arguments(self, _):
             options_list=["--domain", "-d"],
             help="The domain name to configure.",
         )
+
+    with self.argument_context("ez app scale") as c:
+        c.argument(
+            "sku",
+            options_list=["--sku", "-s"],
+            validator=validate_sku_choice,
+            help="The SKU to provision, defaults to B1.",
+        )
