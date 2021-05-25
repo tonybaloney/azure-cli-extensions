@@ -6,17 +6,20 @@
 from dataclasses import dataclass
 import json
 import pathlib
+from knack.util import CLIError
 
-DEFAULT_CONFIG_PATH = '.azure'
-DEFAULT_CONFIG_NAME = 'settings.json'
+DEFAULT_CONFIG_PATH = ".azure"
+DEFAULT_CONFIG_NAME = "settings.json"
 
 
-class NoProjectSettingsError(ValueError):
-    message = "No project settings file exists in {0}/{1}".format(DEFAULT_CONFIG_PATH, DEFAULT_CONFIG_NAME)
+class NoProjectSettingsError(CLIError):
+    message = "No project settings file exists in {0}/{1}".format(
+        DEFAULT_CONFIG_PATH, DEFAULT_CONFIG_NAME
+    )
 
 
 @dataclass
-class OzConfig:
+class EzConfig:
     resource_group_name: str
     region: str
     app_service: bool = False
@@ -25,7 +28,7 @@ class OzConfig:
     database: bool = False
 
     def save(self, file):
-        with open(file, 'w+') as f:
+        with open(file, "w+") as f:
             json.dump(self.__dict__, f)
 
     @classmethod
@@ -36,7 +39,7 @@ class OzConfig:
 
 
 def init_project_settings(resource_group_name: str, region: str):
-    config = OzConfig(resource_group_name=resource_group_name, region=region)
+    config = EzConfig(resource_group_name=resource_group_name, region=region)
     config_root = pathlib.Path() / DEFAULT_CONFIG_PATH
     if not config_root.exists():
         config_root.mkdir()
@@ -44,7 +47,7 @@ def init_project_settings(resource_group_name: str, region: str):
     config.save(config_root / DEFAULT_CONFIG_NAME)
 
 
-def get_project_settings() -> OzConfig :
+def get_project_settings() -> EzConfig:
     config_root = pathlib.Path() / DEFAULT_CONFIG_PATH
     if not config_root.exists():
         raise NoProjectSettingsError
@@ -52,7 +55,7 @@ def get_project_settings() -> OzConfig :
     if not config_file_path.exists():
         raise NoProjectSettingsError
 
-    return OzConfig.load(config_file_path)
+    return EzConfig.load(config_file_path)
 
 
 def destroy_project_settings():

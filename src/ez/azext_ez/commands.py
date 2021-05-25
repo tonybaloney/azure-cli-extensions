@@ -4,19 +4,23 @@
 # --------------------------------------------------------------------------------------------
 
 # pylint: disable=line-too-long
-from azext_oz._client_factory import cf_oz, app_client_factory
+from azext_ez._client_factory import mgmt_client_factory, app_client_factory
 from azure.cli.core.commands import CliCommandType
 
 
 def load_command_table(self, _):
-    oz_sdk = CliCommandType(operations_tmpl="azext_oz.custom#{}", client_factory=cf_oz)
-
-    with self.command_group("oz", command_type=oz_sdk, client_factory=cf_oz) as g:
-        g.custom_command("init", "init_oz")
-        g.custom_command("destroy", "destroy_oz")
+    ez_sdk = CliCommandType(
+        operations_tmpl="azext_ez.custom#{}", client_factory=mgmt_client_factory
+    )
 
     with self.command_group(
-        "oz app", command_type=oz_sdk, client_factory=app_client_factory
+        "ez", command_type=ez_sdk, client_factory=mgmt_client_factory
+    ) as g:
+        g.custom_command("init", "init_ez")
+        g.custom_command("destroy", "destroy_ez")
+
+    with self.command_group(
+        "ez app", command_type=ez_sdk, client_factory=app_client_factory
     ) as g:
         g.custom_command("create", "create_app")
         g.custom_command("settings", "app_settings")

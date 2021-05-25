@@ -23,7 +23,7 @@ from azure.cli.command_modules.appservice.custom import config_diagnostics
 logger = get_logger(__name__)
 
 
-def init_oz(client, location, name=None, tags=None):
+def init_ez(client, location, name=None, tags=None):
     if not name:
         name = app_name()
 
@@ -41,7 +41,7 @@ def init_oz(client, location, name=None, tags=None):
     return rg
 
 
-def destroy_oz(client, confirm=True):
+def destroy_ez(client, confirm=True):
     try:
         project = get_project_settings()
     except NoProjectSettingsError:

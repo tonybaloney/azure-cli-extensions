@@ -8,21 +8,21 @@ from knack.help_files import helps  # pylint: disable=unused-import
 
 
 helps[
-    "oz"
+    "ez"
 ] = """
     type: group
     short-summary: Quick starts for deploying Apps on Azure
 """
 
 helps[
-    "oz init"
+    "ez init"
 ] = """
     type: command
     short-summary: Initialize a new application project
 """
 
 helps[
-    "oz app create"
+    "ez app create"
 ] = """
     type: command
     short-summary: Get an existing project

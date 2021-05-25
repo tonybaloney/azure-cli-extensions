@@ -5,28 +5,31 @@
 
 from azure.cli.core import AzCommandsLoader
 
-from azext_oz._help import helps  # pylint: disable=unused-import
+from azext_ez._help import helps  # pylint: disable=unused-import
 
 
-class OzCommandsLoader(AzCommandsLoader):
-
+class EzCommandsLoader(AzCommandsLoader):
     def __init__(self, cli_ctx=None):
         from azure.cli.core.commands import CliCommandType
-        from azext_oz._client_factory import cf_oz
+        from azext_ez._client_factory import mgmt_client_factory
+
         oz_custom = CliCommandType(
-            operations_tmpl='azext_oz.custom#{}',
-            client_factory=cf_oz)
-        super(OzCommandsLoader, self).__init__(cli_ctx=cli_ctx,
-                                                  custom_command_type=oz_custom)
+            operations_tmpl="azext_ez.custom#{}", client_factory=mgmt_client_factory
+        )
+        super(EzCommandsLoader, self).__init__(
+            cli_ctx=cli_ctx, custom_command_type=oz_custom
+        )
 
     def load_command_table(self, args):
-        from azext_oz.commands import load_command_table
+        from azext_ez.commands import load_command_table
+
         load_command_table(self, args)
         return self.command_table
 
     def load_arguments(self, command):
-        from azext_oz._params import load_arguments
+        from azext_ez._params import load_arguments
+
         load_arguments(self, command)
 
 
-COMMAND_LOADER_CLS = OzCommandsLoader
+COMMAND_LOADER_CLS = EzCommandsLoader
