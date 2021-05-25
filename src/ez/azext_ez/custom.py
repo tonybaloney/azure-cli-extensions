@@ -29,7 +29,7 @@ from azure.cli.command_modules.appservice.custom import (
     get_streaming_log,
 )
 from urllib.parse import quote_plus
-
+from webbrowser import open as browse
 
 logger = get_logger(__name__)
 
@@ -215,3 +215,18 @@ def app_scale(client, sku=None):
     )
     plan = plan_task.result()
     logger.info("SKU changed to %s.", sku)
+
+
+def app_open():
+    project = get_project_settings()
+    if project.app_domain_name:
+        url = "https://{0}/".format(project.app_domain_name)
+    else:
+        url = "https://{0}.azurewebsites.net/".format(project.app_name)
+    browse(url)
+
+
+def app_oryx():
+    project = get_project_settings()
+    url = "https://{0}.scm.azurewebsites.net/".format(project.app_name)
+    browse(url)
