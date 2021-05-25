@@ -87,7 +87,6 @@ def create_app(cmd, client, runtime=None, version=None, sku="F1"):
                 "Version %s is not a valid option for runtime %s." % (version, runtime)
             )
 
-    _runtime_internal = "{0}|{1}".format(runtime.upper(), version)
     logger.info("Creating %s %s app named %s.", runtime, version, _app_name)
 
     # Create service plan
@@ -140,4 +139,15 @@ def create_app(cmd, client, runtime=None, version=None, sku="F1"):
     )
 
     logger.info("When you're ready to deploy, do `git push azure`.")
-    return
+    return webapp
+
+
+def app_settings(client):
+    try:
+        project = get_project_settings()
+    except NoProjectSettingsError:
+        raise CLIError("Can't find a project settings directory. Run `init` first.")
+    settings = client.web_apps.list_application_settings(
+        resource_group_name=project.resource_group_name, name=project.app_name
+    )
+    return settings.properties

@@ -15,7 +15,8 @@ def load_command_table(self, _):
         g.custom_command("init", "init_oz")
         g.custom_command("destroy", "destroy_oz")
 
-    with self.command_group("oz app", command_type=oz_sdk, client_factory=app_client_factory) as g:
+    with self.command_group(
+        "oz app", command_type=oz_sdk, client_factory=app_client_factory
+    ) as g:
         g.custom_command("create", "create_app")
-
-
+        g.custom_command("settings", "app_settings")
