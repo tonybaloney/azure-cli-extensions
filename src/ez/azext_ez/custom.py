@@ -28,6 +28,7 @@ from azure.cli.command_modules.appservice.custom import (
     config_diagnostics,
     get_streaming_log,
 )
+from urllib.parse import quote_plus
 
 
 logger = get_logger(__name__)
@@ -134,8 +135,14 @@ def create_app(cmd, client, runtime=None, version=None, sku="F1"):
         resource_group_name=project.resource_group_name, name=_app_name
     )
     creds = creds_task.result()
-    init_local_folder(creds.scm_uri)
-    update_project_settings(git_url=creds.scm_uri)
+    git_url = "https://{0}:{1}@{2}.scm.azurewebsites.net/{3}.git".format(
+        quote_plus(creds.publishing_user_name),
+        quote_plus(creds.publishing_password),
+        creds.name,
+        creds.name,
+    )
+    init_local_folder(git_url)
+    update_project_settings(git_url=git_url)
     config_diagnostics(
         cmd,
         resource_group_name=project.resource_group_name,
