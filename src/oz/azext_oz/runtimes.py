@@ -16,9 +16,16 @@ def get_runtime_versions(runtime):
 
 
 def map_version_dict(runtime, version):
+    # TODO : Review what is missing.
     if runtime == "python":
         return {"python_version": version}
     elif runtime == "ruby":
         return {"ruby_version": version}
     elif runtime == "dotnet":
         return {"dotnet_version": version}
+    elif runtime == "node":
+        return {"node_version": version}
+    elif runtime == "java":
+        return {"java_version": version}
+    else:
+        return {}

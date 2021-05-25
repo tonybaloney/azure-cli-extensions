@@ -19,6 +19,9 @@ def load_arguments(self, _):
     with self.argument_context("oz") as c:
         c.argument("tags", tags_type)
 
+    with self.argument_context("oz destroy") as c:
+        c.argument("confirm", options_list=['--yes', '-y'], action="store_false")
+
     with self.argument_context("oz init") as c:
         c.argument("location", get_location_type(self.cli_ctx))
         c.argument("name", project_name_type)

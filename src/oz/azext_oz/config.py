@@ -21,6 +21,7 @@ class OzConfig:
     region: str
     app_service: bool = False
     app_name: str = None
+    git_url: str = None
     database: bool = False
 
     def save(self, file):
