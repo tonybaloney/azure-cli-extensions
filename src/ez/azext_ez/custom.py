@@ -12,11 +12,13 @@ from .config import (
     get_project_settings,
     destroy_project_settings,
     update_project_settings,
+    save_dot_env,
     NoProjectSettingsError,
 )
 from .localgit import init_local_folder
 from .runtimes import RUNTIME_GROUPS, get_runtime_versions, map_version_dict
-from .skus import WEBAPP_SKUS
+from .skus import WEBAPP_SKUS, DB_SKUS, DB_ENGINES, DB_STORAGE_SIZES
+from ._client_factory import app_client_factory
 from azure.mgmt.web.models import (
     AppServicePlan,
     Site,
@@ -28,6 +30,7 @@ from azure.cli.command_modules.appservice.custom import (
     config_diagnostics,
     get_streaming_log,
 )
+from secrets import token_hex, token_urlsafe
 from urllib.parse import quote_plus
 from webbrowser import open as browse
 
@@ -71,13 +74,16 @@ def destroy_ez(client, confirm=True):
     return job
 
 
-def create_app(cmd, client, runtime=None, version=None, sku="F1"):
+def create_app(cmd, client, runtime=None, version=None, sku=None):
     project = get_project_settings()
 
     if not runtime:
         runtime = RUNTIME_GROUPS[
             prompting.prompt_choice_list("Select a runtime", RUNTIME_GROUPS)
         ]
+    if not sku:
+        choice = prompting.prompt_choice_list("Select a SKU", WEBAPP_SKUS)
+        sku = WEBAPP_SKUS[choice]["name"]
 
     _plan_name = "{0}-plan".format(project.resource_group_name)
     _app_name = "{0}-app".format(project.resource_group_name)
@@ -230,3 +236,103 @@ def app_oryx():
     project = get_project_settings()
     url = "https://{0}.scm.azurewebsites.net/".format(project.app_name)
     browse(url)
+
+
+def create_db(cmd, client, engine=None, sku=None, size=None):
+    from azure.mgmt.rdbms.mysql.models import (
+        ServerForCreate,
+        ServerPropertiesForDefaultCreate,
+        StorageProfile,
+        Sku,
+        FirewallRule,
+    )
+    from azure.mgmt.rdbms.mysql_flexibleservers.models import (
+        ServerVersion as MySQLVersion,
+    )
+    from azure.mgmt.rdbms.postgresql_flexibleservers.models import (
+        ServerVersion as PostgresVersion,
+    )
+    from requests import get
+
+    public_ip = get("https://api.ipify.org").text
+
+    project = get_project_settings()
+    if not engine:
+        engine = DB_ENGINES[
+            prompting.prompt_choice_list("Select a DB engine", DB_ENGINES)
+        ]
+    if not sku:
+        choice = prompting.prompt_choice_list("Select a SKU", DB_SKUS[engine])
+        sku = DB_SKUS[engine][choice]
+    if not size:
+        choice = prompting.prompt_choice_list("Database Size", DB_STORAGE_SIZES)
+        size = DB_STORAGE_SIZES[choice]["name"]
+    ADMIN_USER = "admin_{0}".format(token_hex(8))
+    ADMIN_PASSWORD = token_urlsafe(20)
+
+    # TODO : Allow choice of version.
+    if engine == "mysql":
+        DB_VERSION = MySQLVersion.EIGHT0
+    elif engine == "postgres":
+        DB_VERSION = PostgresVersion.TWELVE
+
+    _db_name = "{0}-db".format(project.resource_group_name)
+
+    client = getattr(client, engine)
+
+    server_creation_poller = client.servers.begin_create(
+        project.resource_group_name,
+        _db_name,
+        ServerForCreate(
+            properties=ServerPropertiesForDefaultCreate(
+                administrator_login=ADMIN_USER,
+                administrator_login_password=ADMIN_PASSWORD,
+                version=DB_VERSION,
+                storage_profile=StorageProfile(storage_mb=size),
+            ),
+            location=project.region,
+            sku=Sku(
+                name=sku, tier="Burstable"
+            ),  # TODO : allow for choice of [Burstable, GeneralPurpose, MemoryOptimized]
+        ),
+    )
+
+    server = server_creation_poller.result()
+    update_project_settings(database=True, db_name=_db_name, db_engine=engine)
+
+    env_dict = {
+        "DATABASE_URL": f"{engine}://${ADMIN_USER}%40${_db_name}.${engine}.database.azure.com:${ADMIN_PASSWORD}@${_db_name}.${engine}.database.azure.com/${engine}",
+        "DATABASE_HOST": f"{_db_name}.${engine}.database.azure.com",
+        "DATABASE_USER": f"${ADMIN_USER}@${_db_name}.${engine}.database.azure.com",
+        "DATABASE_PASSWORD": ADMIN_PASSWORD,
+        "DATABASE_NAME": engine,
+    }
+
+    # Write .env
+    save_dot_env(env_dict)
+
+    # Save settings to web app
+    app_client = app_client_factory(cmd.cli_ctx)
+    app_settings = app_client.web_apps.list_application_settings(
+        resource_group_name=project.resource_group_name, name=project.app_name
+    )
+    app_settings.update(env_dict)
+    app_client.web_apps.update_application_settings(
+        resource_group_name=project.resource_group_name,
+        name=project.app_name,
+        app_settings=new_settings,
+    )
+
+    # Open access to this server for IPs
+    rule_creation_poller = client.firewall_rules.begin_create_or_update(
+        resource_group_name=project.resource_group_name,
+        server_name=_db_name,
+        firewall_rule_name="allow_local_connection",
+        parameters=FirewallRule(
+            start_ip_address=public_ip,
+            end_ip_address=public_ip,
+        ),
+    )
+
+    firewall_rule = rule_creation_poller.result()
+    return server

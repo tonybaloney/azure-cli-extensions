@@ -8,6 +8,7 @@ import json
 import pathlib
 from typing import Optional
 from knack.util import CLIError
+from os import linesep
 
 DEFAULT_CONFIG_PATH = ".azure"
 DEFAULT_CONFIG_NAME = "settings.json"
@@ -29,6 +30,8 @@ class EzConfig:
     app_domain_name: Optional[str] = None
     git_url: Optional[str] = None
     database: bool = False
+    db_name: Optional[str] = None
+    db_engine: Optional[str] = None
 
     def save(self, file):
         with open(file, "w+") as f:
@@ -78,3 +81,12 @@ def update_project_settings(**kwargs):
     for k, v in kwargs.items():
         setattr(settings, k, v)
     settings.save(pathlib.Path() / DEFAULT_CONFIG_PATH / DEFAULT_CONFIG_NAME)
+
+
+def save_dot_env(env_dict):
+    env_path = pathlib.Path() / DEFAULT_CONFIG_PATH / ".env"
+    if not env_path.exists():
+        env_path.touch()
+    with open(env_path, "w") as env_f:
+        for k, v in env_dict.items():
+            env_f.write(f"{k}={v}{linesep}")

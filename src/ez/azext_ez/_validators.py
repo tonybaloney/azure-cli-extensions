@@ -4,7 +4,7 @@
 # --------------------------------------------------------------------------------------------
 
 from .runtimes import RUNTIME_GROUPS
-from .skus import WEBAPP_SKUS
+from .skus import WEBAPP_SKUS, DB_SKUS, DB_ENGINES
 from knack.util import CLIError
 
 
@@ -14,7 +14,7 @@ def validate_runtime_choice(cmd, namespace):
             raise CLIError("Invalid runtime %s." % namespace.runtime)
 
 
-def validate_sku_choice(cmd, namespace):
+def validate_webapp_sku_choice(cmd, namespace):
     if namespace.sku:
         is_valid = False
         for sku in WEBAPP_SKUS:
@@ -23,3 +23,15 @@ def validate_sku_choice(cmd, namespace):
 
         if not is_valid:
             raise CLIError("Invalid SKU %s." % namespace.sku)
+
+
+def validate_db_sku_choice(cmd, namespace):
+    if namespace.sku and namespace.engine:
+        if namespace.sku not in DB_SKUS[namespace.engine]:
+            raise CLIError("Invalid SKU %s." % namespace.sku)
+
+
+def validate_db_engine_choice(cmd, namespace):
+    if namespace.engine:
+        if namespace.engine not in DB_ENGINES:
+            raise CLIError("Invalid runtime %s." % namespace.engine)

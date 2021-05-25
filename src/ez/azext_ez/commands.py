@@ -4,7 +4,11 @@
 # --------------------------------------------------------------------------------------------
 
 # pylint: disable=line-too-long
-from azext_ez._client_factory import mgmt_client_factory, app_client_factory
+from azext_ez._client_factory import (
+    mgmt_client_factory,
+    app_client_factory,
+    db_client_factory,
+)
 from azure.cli.core.commands import CliCommandType
 
 
@@ -29,3 +33,8 @@ def load_command_table(self, _):
         g.custom_command("scale", "app_scale")
         g.custom_command("open", "app_open")
         g.custom_command("oryx", "app_oryx")
+
+    with self.command_group(
+        "ez db", command_type=ez_sdk, client_factory=db_client_factory
+    ) as g:
+        g.custom_command("create", "create_db")

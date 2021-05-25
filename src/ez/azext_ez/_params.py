@@ -10,7 +10,12 @@ from knack.arguments import CLIArgumentType
 def load_arguments(self, _):
 
     from azure.cli.core.commands.parameters import tags_type, get_location_type
-    from ._validators import validate_runtime_choice, validate_sku_choice
+    from ._validators import (
+        validate_runtime_choice,
+        validate_webapp_sku_choice,
+        validate_db_engine_choice,
+        validate_db_sku_choice,
+    )
 
     project_name_type = CLIArgumentType(
         options_list="--name", help="Name of the project", id_part="name"
@@ -41,7 +46,7 @@ def load_arguments(self, _):
         c.argument(
             "sku",
             options_list=["--sku", "-s"],
-            validator=validate_sku_choice,
+            validator=validate_webapp_sku_choice,
             help="The SKU to provision, defaults to F1 (free).",
         )
 
@@ -56,6 +61,20 @@ def load_arguments(self, _):
         c.argument(
             "sku",
             options_list=["--sku", "-s"],
-            validator=validate_sku_choice,
+            validator=validate_webapp_sku_choice,
             help="The SKU to provision, defaults to B1.",
+        )
+
+    with self.argument_context("ez db create") as c:
+        c.argument(
+            "engine",
+            options_list=["--engine", "-e"],
+            validator=validate_db_engine_choice,
+            help="The name of the database engine.",
+        )
+        c.argument(
+            "sku",
+            options_list=["--sku", "-s"],
+            validator=validate_db_sku_choice,
+            help="The SKU to provision.",
         )
