@@ -17,7 +17,10 @@ from .config import (
 from .localgit import init_local_folder
 from .runtimes import RUNTIME_GROUPS, get_runtime_versions, map_version_dict
 from azure.mgmt.web.models import AppServicePlan, Site, SiteConfig, SkuDescription
-from azure.cli.command_modules.appservice.custom import config_diagnostics
+from azure.cli.command_modules.appservice.custom import (
+    config_diagnostics,
+    get_streaming_log,
+)
 
 
 logger = get_logger(__name__)
@@ -61,10 +64,7 @@ def destroy_ez(client, confirm=True):
 
 
 def create_app(cmd, client, runtime=None, version=None, sku="F1"):
-    try:
-        project = get_project_settings()
-    except NoProjectSettingsError:
-        raise CLIError("Can't find a project settings directory. Run `init` first.")
+    project = get_project_settings()
 
     if not runtime:
         runtime = RUNTIME_GROUPS[
@@ -143,11 +143,13 @@ def create_app(cmd, client, runtime=None, version=None, sku="F1"):
 
 
 def app_settings(client):
-    try:
-        project = get_project_settings()
-    except NoProjectSettingsError:
-        raise CLIError("Can't find a project settings directory. Run `init` first.")
+    project = get_project_settings()
     settings = client.web_apps.list_application_settings(
         resource_group_name=project.resource_group_name, name=project.app_name
     )
     return settings.properties
+
+
+def app_logs(cmd):
+    project = get_project_settings()
+    get_streaming_log(cmd, project.resource_group_name, project.app_name)

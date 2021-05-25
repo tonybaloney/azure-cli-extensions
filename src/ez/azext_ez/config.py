@@ -6,6 +6,7 @@
 from dataclasses import dataclass
 import json
 import pathlib
+from typing import Optional
 from knack.util import CLIError
 
 DEFAULT_CONFIG_PATH = ".azure"
@@ -23,8 +24,8 @@ class EzConfig:
     resource_group_name: str
     region: str
     app_service: bool = False
-    app_name: str = None
-    git_url: str = None
+    app_name: Optional[str] = None
+    git_url: Optional[str] = None
     database: bool = False
 
     def save(self, file):
@@ -65,7 +66,9 @@ def destroy_project_settings():
     config_file_path = config_root / DEFAULT_CONFIG_NAME
     if config_file_path.exists():
         config_file_path.unlink()
-    config_root.rmdir()  # This will fail if there are other files in the directory,  but thats ok because I don't know what they are
+    # This will fail if there are other files in the directory,
+    # but thats ok because I don't know what they are.
+    config_root.rmdir()
 
 
 def update_project_settings(**kwargs):
