@@ -301,9 +301,9 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
     update_project_settings(database=True, db_name=_db_name, db_engine=engine)
 
     env_dict = {
-        "DATABASE_URL": f"{engine}://${ADMIN_USER}%40${_db_name}.${engine}.database.azure.com:${ADMIN_PASSWORD}@${_db_name}.${engine}.database.azure.com/${engine}",
-        "DATABASE_HOST": f"{_db_name}.${engine}.database.azure.com",
-        "DATABASE_USER": f"${ADMIN_USER}@${_db_name}.${engine}.database.azure.com",
+        "DATABASE_URL": f"{engine}://{ADMIN_USER}%40{_db_name}.{engine}.database.azure.com:{ADMIN_PASSWORD}@{_db_name}.{engine}.database.azure.com/{engine}",
+        "DATABASE_HOST": f"{_db_name}.{engine}.database.azure.com",
+        "DATABASE_USER": f"{ADMIN_USER}@{_db_name}.{engine}.database.azure.com",
         "DATABASE_PASSWORD": ADMIN_PASSWORD,
         "DATABASE_NAME": engine,
     }
@@ -313,14 +313,15 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
 
     # Save settings to web app
     app_client = app_client_factory(cmd.cli_ctx)
-    app_settings = app_client.web_apps.list_application_settings(
+    app_settings_task = app_client.web_apps.list_application_settings(
         resource_group_name=project.resource_group_name, name=project.app_name
     )
-    app_settings.update(env_dict)
+    app_settings_dict = app_settings_task.as_dict()
+    app_settings_dict.update(env_dict)
     app_client.web_apps.update_application_settings(
         resource_group_name=project.resource_group_name,
         name=project.app_name,
-        app_settings=new_settings,
+        app_settings=app_settings_dict,
     )
 
     # Open access to this server for IPs
