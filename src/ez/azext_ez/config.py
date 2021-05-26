@@ -12,6 +12,7 @@ from os import linesep
 
 DEFAULT_CONFIG_PATH = ".azure"
 DEFAULT_CONFIG_NAME = "settings.json"
+ENV_NAME = ".env"
 
 
 class NoProjectSettingsError(CLIError):
@@ -71,6 +72,9 @@ def destroy_project_settings():
     config_file_path = config_root / DEFAULT_CONFIG_NAME
     if config_file_path.exists():
         config_file_path.unlink()
+    env_path = config_root / ENV_NAME
+    if env_path.exists():
+        env_path.unlink()
     # This will fail if there are other files in the directory,
     # but thats ok because I don't know what they are.
     config_root.rmdir()
@@ -84,7 +88,7 @@ def update_project_settings(**kwargs):
 
 
 def save_dot_env(env_dict):
-    env_path = pathlib.Path() / DEFAULT_CONFIG_PATH / ".env"
+    env_path = pathlib.Path() / DEFAULT_CONFIG_PATH / ENV_NAME
     if not env_path.exists():
         env_path.touch()
     with open(env_path, "w") as env_f:
@@ -93,7 +97,7 @@ def save_dot_env(env_dict):
 
 
 def load_dot_env() -> dict:
-    env_path = pathlib.Path() / DEFAULT_CONFIG_PATH / ".env"
+    env_path = pathlib.Path() / DEFAULT_CONFIG_PATH / ENV_NAME
     if not env_path.exists():
         raise NoProjectSettingsError
     result = {}

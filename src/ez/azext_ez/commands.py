@@ -20,13 +20,18 @@ def load_command_table(self, _):
     with self.command_group(
         "ez", command_type=ez_sdk, client_factory=mgmt_client_factory
     ) as g:
-        g.custom_command("init", "init_ez")
-        g.custom_command("destroy", "destroy_ez")
+        g.custom_command("init", "ez_init")
+        g.custom_command("destroy", "ez_destroy")
+
+    with self.command_group(
+        "ez", command_type=ez_sdk, client_factory=app_client_factory
+    ) as g:
+        g.custom_command("get", "app_get")
 
     with self.command_group(
         "ez app", command_type=ez_sdk, client_factory=app_client_factory
     ) as g:
-        g.custom_command("create", "create_app")
+        g.custom_command("create", "app_create")
         g.custom_command("settings", "app_settings")
         g.custom_command("logs", "app_logs")
         g.custom_command("domain", "app_set_domain")
@@ -37,6 +42,6 @@ def load_command_table(self, _):
     with self.command_group(
         "ez db", command_type=ez_sdk, client_factory=db_client_factory
     ) as g:
-        g.custom_command("create", "create_db")
+        g.custom_command("create", "db_create")
         g.custom_command("scale", "db_scale")
         g.custom_command("connect", "db_connect")

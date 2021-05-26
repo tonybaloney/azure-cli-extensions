@@ -57,6 +57,14 @@ def load_arguments(self, _):
             help="The domain name to configure.",
         )
 
+    with self.argument_context("ez app get") as c:
+        c.argument(
+            "overwrite",
+            options_list=["--overwrite", "-f"],
+            action="store_true",
+            help="Force overwrite your current settings.",
+        )
+
     with self.argument_context("ez app scale") as c:
         c.argument(
             "sku",

@@ -32,7 +32,7 @@ from azure.cli.command_modules.appservice.custom import (
     get_streaming_log,
 )
 from secrets import token_hex, token_urlsafe
-from urllib.parse import parse_qsl, quote_plus
+from urllib.parse import quote_plus
 from webbrowser import open as browse
 
 DEFAULT_LOCATION = "westus"
@@ -40,7 +40,7 @@ DEFAULT_LOCATION = "westus"
 logger = get_logger(__name__)
 
 
-def init_ez(client, location, name=None, tags=None):
+def ez_init(client, location, name=None, tags=None):
     if not name:
         name = app_name()
     logger.info("Creating project %s.", name)
@@ -57,7 +57,7 @@ def init_ez(client, location, name=None, tags=None):
     return rg
 
 
-def destroy_ez(client, confirm=True):
+def ez_destroy(client, confirm=True):
     try:
         project = get_project_settings()
     except NoProjectSettingsError:
@@ -76,7 +76,7 @@ def destroy_ez(client, confirm=True):
     return job
 
 
-def create_app(cmd, client, runtime=None, version=None, sku=None):
+def app_create(cmd, client, runtime=None, version=None, sku=None):
     project = get_project_settings()
 
     if not runtime:
@@ -220,7 +220,7 @@ def app_scale(client, sku=None):
             ),
         ),
     )
-    plan = plan_task.result()
+    plan_task.result()
     logger.info("SKU changed to %s.", sku)
 
 
@@ -239,7 +239,46 @@ def app_oryx():
     browse(url)
 
 
-def create_db(cmd, client, engine=None, sku=None, size=None):
+def app_get(client, overwrite=False):
+    # TODO : Spec out the overwrite method
+    webapps = list(client.web_apps.list())
+    webapp_names = [webapp.name for webapp in webapps]
+    webapp = webapps[prompting.prompt_choice_list("Select a web app", webapp_names)]
+    init_project_settings(webapp.resource_group, region=webapp.location)
+    _plan_name = "{0}-plan".format(webapp.resource_group)
+    update_project_settings(
+        app_service=True,
+        app_name=webapp.name,
+        app_plan_name=_plan_name,
+        app_domain_name=webapp.default_host_name,
+    )
+    app_settings_task = client.web_apps.list_application_settings(
+        resource_group_name=webapp.resource_group, name=webapp.name
+    )
+    app_settings_dict = app_settings_task.properties
+    save_dot_env(app_settings_dict)
+    creds_task = client.web_apps.begin_list_publishing_credentials(
+        resource_group_name=webapp.resource_group, name=webapp.name
+    )
+    creds = creds_task.result()
+    git_url = "https://{0}:{1}@{2}.scm.azurewebsites.net/{3}.git".format(
+        quote_plus(creds.publishing_user_name),
+        quote_plus(creds.publishing_password),
+        creds.name,
+        creds.name,
+    )
+    init_local_folder(git_url)
+    update_project_settings(git_url=git_url)
+
+    if "DATABASE_URL" not in app_settings_dict:
+        return
+    _db_name = "{0}-db".format(webapp.resource_group)
+    update_project_settings(
+        database=True, db_name=_db_name, db_engine=app_settings_dict["DATABASE_NAME"]
+    )
+
+
+def db_create(cmd, client, engine=None, sku=None, size=None):
     from azure.mgmt.rdbms.mysql.models import (
         ServerForCreate,
         ServerPropertiesForDefaultCreate,
@@ -274,6 +313,8 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
         DB_VERSION = MySQLVersion.EIGHT0
     elif engine == "postgres":
         DB_VERSION = PostgresVersion.TWELVE
+    else:
+        raise NotImplementedError
 
     _db_name = "{0}-db".format(project.resource_group_name)
 
@@ -341,7 +382,7 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
         ),
     )
 
-    firewall_rule = rule_creation_poller.result()
+    rule_creation_poller.result()
     logger.info("Added a firewall rule for your IP, %s.", public_ip)
 
     return server
