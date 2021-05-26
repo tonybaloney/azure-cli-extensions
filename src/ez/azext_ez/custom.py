@@ -109,7 +109,9 @@ def app_create(cmd, client, runtime=None, version=None, sku=None):
         resource_group_name=project.resource_group_name,
         name=_plan_name,
         app_service_plan=AppServicePlan(
+            kind="linux",
             location=project.region,
+            reserved=True,
             sku=SkuDescription(
                 name=sku,
             ),
@@ -123,10 +125,14 @@ def app_create(cmd, client, runtime=None, version=None, sku=None):
         project.resource_group_name,
         _app_name,
         site_envelope=Site(
+            kind="app,linux",
             location=project.region,
             server_farm_id=plan.id,
             site_config=SiteConfig(
-                scm_type="LocalGit", **map_version_dict(runtime, version)
+                linux_fx_version="{0}|{1}".format(runtime.upper(), version),
+                scm_type="LocalGit",
+                http_logging_enabled=True,
+                ftps_state="Disabled",
             ),
         ),
     )
