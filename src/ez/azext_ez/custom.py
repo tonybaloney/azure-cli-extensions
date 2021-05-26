@@ -34,13 +34,14 @@ from secrets import token_hex, token_urlsafe
 from urllib.parse import quote_plus
 from webbrowser import open as browse
 
+DEFAULT_LOCATION = "westus"
+
 logger = get_logger(__name__)
 
 
 def init_ez(client, location, name=None, tags=None):
     if not name:
         name = app_name()
-
     logger.info("Creating project %s.", name)
     params = {
         "location": location,
@@ -82,8 +83,7 @@ def create_app(cmd, client, runtime=None, version=None, sku=None):
             prompting.prompt_choice_list("Select a runtime", RUNTIME_GROUPS)
         ]
     if not sku:
-        choice = prompting.prompt_choice_list("Select a SKU", WEBAPP_SKUS)
-        sku = WEBAPP_SKUS[choice]["name"]
+        sku = WEBAPP_SKUS[0]["name"]
 
     _plan_name = "{0}-plan".format(project.resource_group_name)
     _app_name = "{0}-app".format(project.resource_group_name)
@@ -262,11 +262,9 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
             prompting.prompt_choice_list("Select a DB engine", DB_ENGINES)
         ]
     if not sku:
-        choice = prompting.prompt_choice_list("Select a SKU", DB_SKUS[engine])
-        sku = DB_SKUS[engine][choice]
+        sku = DB_SKUS[engine][0]
     if not size:
-        choice = prompting.prompt_choice_list("Database Size", DB_STORAGE_SIZES)
-        size = DB_STORAGE_SIZES[choice]["name"]
+        size = DB_STORAGE_SIZES[0]["name"]
     ADMIN_USER = "admin_{0}".format(token_hex(8))
     ADMIN_PASSWORD = token_urlsafe(20)
 
@@ -279,6 +277,7 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
     _db_name = "{0}-db".format(project.resource_group_name)
 
     client = getattr(client, engine)
+    logger.info("Creating database server %s.", _db_name)
 
     server_creation_poller = client.servers.begin_create(
         project.resource_group_name,
@@ -298,6 +297,8 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
     )
 
     server = server_creation_poller.result()
+    logger.info("Created database server %s.", _db_name)
+
     update_project_settings(database=True, db_name=_db_name, db_engine=engine)
 
     env_dict = {
@@ -313,6 +314,8 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
 
     # Save settings to web app
     app_client = app_client_factory(cmd.cli_ctx)
+    logger.info("Updating web app settings.")
+
     app_settings_task = app_client.web_apps.list_application_settings(
         resource_group_name=project.resource_group_name, name=project.app_name
     )
@@ -323,7 +326,9 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
         name=project.app_name,
         app_settings=app_settings_dict,
     )
+    logger.info("Updated web app settings.")
 
+    logger.info("Adding a firewall rule for your IP, %s.", public_ip)
     # Open access to this server for IPs
     rule_creation_poller = client.firewall_rules.begin_create_or_update(
         resource_group_name=project.resource_group_name,
@@ -336,4 +341,6 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
     )
 
     firewall_rule = rule_creation_poller.result()
+    logger.info("Added a firewall rule for your IP, %s.", public_ip)
+
     return server
