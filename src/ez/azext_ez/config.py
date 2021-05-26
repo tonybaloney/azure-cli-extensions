@@ -90,3 +90,15 @@ def save_dot_env(env_dict):
     with open(env_path, "w") as env_f:
         for k, v in env_dict.items():
             env_f.write(f"{k}={v}{linesep}")
+
+
+def load_dot_env() -> dict:
+    env_path = pathlib.Path() / DEFAULT_CONFIG_PATH / ".env"
+    if not env_path.exists():
+        raise NoProjectSettingsError
+    result = {}
+    with open(env_path, "r") as env_f:
+        for line in env_f:
+            line_parts = line.split("=", 2)
+            result[line_parts[0]] = line_parts[1]
+    return result

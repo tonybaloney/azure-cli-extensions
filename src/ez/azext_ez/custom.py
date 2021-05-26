@@ -11,6 +11,7 @@ from .config import (
     init_project_settings,
     get_project_settings,
     destroy_project_settings,
+    load_dot_env,
     update_project_settings,
     save_dot_env,
     NoProjectSettingsError,
@@ -31,7 +32,7 @@ from azure.cli.command_modules.appservice.custom import (
     get_streaming_log,
 )
 from secrets import token_hex, token_urlsafe
-from urllib.parse import quote_plus
+from urllib.parse import parse_qsl, quote_plus
 from webbrowser import open as browse
 
 DEFAULT_LOCATION = "westus"
@@ -371,3 +372,23 @@ def db_scale(client, sku=None):
     server_update.result()
     logger.info("SKU changed to %s.", sku)
     return
+
+
+def db_connect():
+    from os import spawnvpe, P_WAIT, environ
+
+    project = get_project_settings()
+    assert project.database
+    if project.db_engine == "postgres":
+        shell = "psql"
+    elif project.db_engine == "mysql":
+        shell = "mysql"
+    else:
+        raise NotImplementedError
+
+    env = load_dot_env()
+    res = spawnvpe(P_WAIT, shell, [env["DATABASE_URL"]], environ)
+    if res != 0:
+        raise Exception(
+            "Could not run {0}, make sure you have it installed".format(shell)
+        )

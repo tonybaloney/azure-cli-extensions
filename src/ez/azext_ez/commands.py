@@ -39,3 +39,4 @@ def load_command_table(self, _):
     ) as g:
         g.custom_command("create", "create_db")
         g.custom_command("scale", "db_scale")
+        g.custom_command("connect", "db_connect")
