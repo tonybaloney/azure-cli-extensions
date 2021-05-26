@@ -344,3 +344,30 @@ def create_db(cmd, client, engine=None, sku=None, size=None):
     logger.info("Added a firewall rule for your IP, %s.", public_ip)
 
     return server
+
+
+def db_scale(client, sku=None):
+    from azure.mgmt.rdbms.mysql_flexibleservers.models import (
+        ServerForUpdate,
+        Sku,
+    )
+
+    project = get_project_settings()
+    assert project.database
+    engine = project.db_engine
+    if not sku:
+        choice = prompting.prompt_choice_list("Select a SKU", DB_SKUS[engine])
+        sku = DB_SKUS[engine][choice]
+    client = getattr(client, engine)
+    logger.info("Setting SKU to %s.", sku)
+
+    server_update = client.servers.begin_update(
+        project.resource_group_name,
+        project.db_name,
+        ServerForUpdate(
+            sku=Sku(name=sku, tier="Burstable"),
+        ),
+    )
+    server_update.result()
+    logger.info("SKU changed to %s.", sku)
+    return

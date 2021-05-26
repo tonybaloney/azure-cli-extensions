@@ -38,3 +38,4 @@ def load_command_table(self, _):
         "ez db", command_type=ez_sdk, client_factory=db_client_factory
     ) as g:
         g.custom_command("create", "create_db")
+        g.custom_command("scale", "db_scale")

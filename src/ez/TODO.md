@@ -2,6 +2,4 @@
 
 1. Implement the `app get` command
 1. Show verbose output without the user specifying `--verbose`
-1. Implement `db create`
 1. Implement `db connect`
-1. Implement `db scale`
