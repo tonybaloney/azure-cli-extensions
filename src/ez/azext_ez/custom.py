@@ -358,15 +358,14 @@ def db_create(cmd, client, engine=None, sku=None, size=None):
     app_client = app_client_factory(cmd.cli_ctx)
     logger.info("Updating web app settings.")
 
-    app_settings_task = app_client.web_apps.list_application_settings(
+    preview_app_settings = app_client.web_apps.list_application_settings(
         resource_group_name=project.resource_group_name, name=project.app_name
     )
-    app_settings_dict = app_settings_task.as_dict()
-    app_settings_dict.update(env_dict)
+    preview_app_settings.properties.update(env_dict)
     app_client.web_apps.update_application_settings(
         resource_group_name=project.resource_group_name,
         name=project.app_name,
-        app_settings=app_settings_dict,
+        app_settings=preview_app_settings,
     )
     logger.info("Updated web app settings.")
 
